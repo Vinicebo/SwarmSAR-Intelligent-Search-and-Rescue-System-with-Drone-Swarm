@@ -1,0 +1,15 @@
+swarm:
+  num_drones: 30
+  comm_range_m: 50.0
+  spawn_area_m: 20.0       # radius around origin where drones spawn
+
+battery:
+  capacity_wh: 10.0
+  return_threshold_pct: 20.0
+  critical_threshold_pct: 10.0
+  consumption_rate_w: 50.0  # average watts during flight
+
+mission:
+  target_coverage_pct: 90.0
+  search_area_m: 500.0      # side length of square search zone
+  victim_count: 10

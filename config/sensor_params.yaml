@@ -1,0 +1,26 @@
+lidar:
+  range_m: 20.0
+  angle_min_rad: -1.5708   # -90 degrees
+  angle_max_rad: 1.5708    #  90 degrees
+  resolution_deg: 1.0
+  noise_std: 0.02
+
+gps:
+  update_rate_hz: 10.0
+  noise_std_m: 0.5
+
+imu:
+  update_rate_hz: 100.0
+  gyro_noise_std: 0.001
+  accel_noise_std: 0.01
+
+camera:
+  width_px: 640
+  height_px: 480
+  fov_deg: 60.0
+  update_rate_hz: 30.0
+
+victim_detector:
+  detection_range_m: 8.0
+  false_positive_rate: 0.02
+  confirmation_frames: 5

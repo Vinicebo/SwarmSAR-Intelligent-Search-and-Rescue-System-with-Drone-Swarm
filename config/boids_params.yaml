@@ -1,0 +1,8 @@
+boids:
+  separation_weight: 1.5
+  alignment_weight: 1.0
+  cohesion_weight: 0.8
+  separation_radius_m: 5.0
+  neighbor_radius_m: 20.0
+  max_speed_ms: 5.0
+  max_force: 0.5
