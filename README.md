@@ -192,7 +192,7 @@ SwarmSAR/
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Ubuntu | 22.04 LTS | Required for ROS 2 Humble (WSL2 on Windows works) |
+| Ubuntu | 22.04 LTS | Native partition recommended; WSL2 works but has GPU limitations |
 | ROS 2 | Humble Hawksbill | LTS release, supported until 2027 |
 | Gazebo | Garden (or Classic 11) | Simulation engine |
 | Python | 3.10+ | For ROS 2 nodes and scripts |

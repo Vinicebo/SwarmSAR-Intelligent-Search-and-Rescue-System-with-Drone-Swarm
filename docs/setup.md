@@ -2,24 +2,13 @@
 
 ## System Requirements
 
-- Ubuntu 22.04 LTS (native or WSL2 on Windows 11)
+- Ubuntu 22.04 LTS (native partition — recommended)
 - 8 GB RAM minimum (16 GB recommended for 30-drone simulation)
 - GPU recommended for Gazebo rendering
 
 ## Step-by-step Installation
 
-### 1. WSL2 Setup (Windows users only)
-
-```powershell
-# In PowerShell (Administrator)
-wsl --install -d Ubuntu-22.04
-```
-
-Restart, then open Ubuntu 22.04 from the Start menu.
-
-### 2. ROS 2 Humble
-
-Follow the official guide or run:
+### 1. ROS 2 Humble
 
 ```bash
 sudo apt update && sudo apt upgrade -y
@@ -37,19 +26,41 @@ sudo apt update
 sudo apt install -y ros-humble-desktop python3-colcon-common-extensions
 ```
 
-Add to `~/.bashrc`:
+Add to `~/.bashrc` so you don't need to source manually every session:
+
 ```bash
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### 3. Gazebo + ROS 2 Bridge
+Verify the installation:
+
+```bash
+ros2 run demo_nodes_cpp talker
+# In another terminal:
+ros2 run demo_nodes_py listener
+```
+
+### 2. Gazebo + ROS 2 Bridge
 
 ```bash
 sudo apt install -y ros-humble-gazebo-ros-pkgs ros-humble-gazebo-plugins
 ```
 
-### 4. Build the Workspace
+Verify:
+
+```bash
+gazebo --version
+# Expected: Gazebo multi-robot simulator, version 11.x.x
+```
+
+### 3. Python Dependencies
+
+```bash
+pip3 install numpy scipy matplotlib
+```
+
+### 4. Clone and Build the Workspace
 
 ```bash
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
@@ -60,10 +71,22 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 5. Verify Installation
+Also add to `~/.bashrc`:
+
+```bash
+echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
+```
+
+### 5. First Test
 
 ```bash
 ros2 launch swarmsar single_drone.launch.py
 ```
 
 Gazebo should open with a single drone hovering in an empty world.
+
+## Tips
+
+- If Gazebo opens but the drone does not appear, rerun `colcon build` and check for compilation errors.
+- For GPU acceleration (Nvidia): ensure Nvidia drivers are active on Ubuntu before launching Gazebo.
+- To simulate 30 drones without freezing: lower the Gazebo update rate (`<real_time_update_rate>100</real_time_update_rate>` in the `.world` file).
