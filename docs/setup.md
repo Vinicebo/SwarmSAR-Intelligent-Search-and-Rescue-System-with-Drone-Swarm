@@ -80,7 +80,7 @@ echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
 ### 5. First Test
 
 ```bash
-ros2 launch swarmsar single_drone.launch.py
+ros2 launch simulator single_drone.launch.py
 ```
 
 Gazebo should open with a single drone hovering in an empty world.

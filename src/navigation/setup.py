@@ -17,6 +17,8 @@ setup(
     description='Waypoint navigation and A* path planning for SwarmSAR drones.',
     license='MIT',
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'hover_controller = navigation.hover_controller:main',
+        ],
     },
 )

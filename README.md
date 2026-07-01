@@ -248,19 +248,19 @@ pip install numpy scipy matplotlib
 ### Phase 1 — Single drone in empty world
 
 ```bash
-ros2 launch swarmsar single_drone.launch.py
+ros2 launch simulator single_drone.launch.py
 ```
 
 ### Phase 2 — Full swarm (30 drones)
 
 ```bash
-ros2 launch swarmsar swarm.launch.py num_drones:=30 world:=earthquake_city
+ros2 launch simulator swarm.launch.py num_drones:=30 world:=earthquake_city
 ```
 
 ### Phase 3 — With dashboard
 
 ```bash
-ros2 launch swarmsar dashboard.launch.py
+ros2 launch simulator dashboard.launch.py
 ```
 
 ---
