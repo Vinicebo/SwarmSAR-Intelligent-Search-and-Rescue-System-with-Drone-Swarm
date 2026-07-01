@@ -192,12 +192,12 @@ SwarmSAR/
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Ubuntu | 22.04 LTS | Native partition recommended; WSL2 works but has GPU limitations |
-| ROS 2 | Humble Hawksbill | LTS release, supported until 2027 |
-| Gazebo | Garden (or Classic 11) | Simulation engine |
-| Python | 3.10+ | For ROS 2 nodes and scripts |
+| Ubuntu | 26.04 LTS "Resolute Raccoon" | Native partition recommended |
+| ROS 2 | Lyrical Luth | LTS release, supported until May 2031 |
+| Gazebo | Jetty (`gz-sim`) | Official simulator pairing for ROS 2 Lyrical, via `ros_gz` |
+| Python | 3.12+ | For ROS 2 nodes and scripts |
 
-### 1. Install ROS 2 Humble
+### 1. Install ROS 2 Lyrical Luth
 
 ```bash
 # Set locale
@@ -214,13 +214,15 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-a
   | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 # Install ROS 2 desktop (includes RViz)
-sudo apt update && sudo apt install ros-humble-desktop
+sudo apt update && sudo apt install ros-lyrical-desktop
 ```
 
-### 2. Install Gazebo
+### 2. Install Gazebo Jetty (via ROS vendor packages)
+
+Since ROS 2 Jazzy, Gazebo ships as ROS vendor packages — no separate OSRF repository is needed.
 
 ```bash
-sudo apt install ros-humble-gazebo-ros-pkgs
+sudo apt install ros-lyrical-ros-gz ros-lyrical-ros-gz-sim ros-lyrical-ros-gz-bridge ros-lyrical-ros-gz-interfaces
 ```
 
 ### 3. Clone and Build This Project
@@ -230,7 +232,7 @@ mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 git clone https://github.com/YOUR_USERNAME/SwarmSAR.git
 
 cd ~/ros2_ws
-source /opt/ros/humble/setup.bash
+source /opt/ros/lyrical/setup.bash
 colcon build --symlink-install
 source install/setup.bash
 ```
@@ -313,7 +315,7 @@ The system logs the following metrics at the end of each simulation run (saved t
 
 | Technology | Role |
 |------------|------|
-| ROS 2 Humble | Middleware: topics, nodes, launch files, parameter server |
+| ROS 2 Lyrical Luth | Middleware: topics, nodes, launch files, parameter server |
 | Gazebo | Physics simulation, sensor plugins, world rendering |
 | RViz 2 | Real-time visualization of topics, maps, and trajectories |
 | Python 3 | All nodes and algorithms (Phase 1–4) |

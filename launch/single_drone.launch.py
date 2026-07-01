@@ -9,26 +9,34 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     simulator_share = get_package_share_directory('simulator')
-    gazebo_ros_share = get_package_share_directory('gazebo_ros')
+    ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
     world_path = os.path.join(simulator_share, 'worlds', 'earthquake_city.world')
     model_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf')
+    bridge_config_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml')
 
-    gazebo = IncludeLaunchDescription(
+    gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(gazebo_ros_share, 'launch', 'gazebo.launch.py')
+            os.path.join(ros_gz_sim_share, 'launch', 'gz_sim.launch.py')
         ),
-        launch_arguments={'world': world_path}.items(),
+        launch_arguments={'gz_args': world_path}.items(),
     )
 
     spawn_drone = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
+        package='ros_gz_sim',
+        executable='create',
         arguments=[
-            '-entity', 'drone_1',
+            '-name', 'drone_1',
             '-file', model_path,
             '-x', '0', '-y', '0', '-z', '0.5',
         ],
+        output='screen',
+    )
+
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        parameters=[{'config_file': bridge_config_path}],
         output='screen',
     )
 
@@ -40,7 +48,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        gazebo,
+        gz_sim,
         spawn_drone,
+        bridge,
         hover_controller,
     ])

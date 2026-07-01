@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Wrench
+from ros_gz_interfaces.msg import EntityWrench
+from ros_gz_interfaces.msg import Entity
 
 GRAVITY_MS2 = 9.81
 DRONE_MASS_KG = 1.5
@@ -14,14 +15,17 @@ class HoverController(Node):
 
     def __init__(self):
         super().__init__('hover_controller')
-        self.publisher = self.create_publisher(Wrench, 'force', 10)
+        self.publisher = self.create_publisher(EntityWrench, 'force', 10)
         self.timer = self.create_timer(0.05, self.publish_hover_force)
         self.get_logger().info('Hover controller started.')
 
     def publish_hover_force(self):
-        wrench = Wrench()
-        wrench.force.z = DRONE_MASS_KG * GRAVITY_MS2
-        self.publisher.publish(wrench)
+        msg = EntityWrench()
+        msg.entity = Entity()
+        msg.entity.name = 'drone_1::base_link'
+        msg.entity.type = Entity.LINK
+        msg.wrench.force.z = DRONE_MASS_KG * GRAVITY_MS2
+        self.publisher.publish(msg)
 
 
 def main(args=None):
