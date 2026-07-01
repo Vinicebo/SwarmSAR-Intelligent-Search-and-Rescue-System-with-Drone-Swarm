@@ -1,0 +1,31 @@
+# ROS 2 workspace build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+*.so
+
+# Gazebo
+*.bag
+*.db3
+
+# Results
+results/*.csv
+results/*.json
+results/*.png
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
