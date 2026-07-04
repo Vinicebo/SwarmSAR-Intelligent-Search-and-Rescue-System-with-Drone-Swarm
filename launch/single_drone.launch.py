@@ -28,7 +28,7 @@ def generate_launch_description():
         arguments=[
             '-name', 'drone_1',
             '-file', model_path,
-            '-x', '0', '-y', '0', '-z', '0.5',
+            '-x', '0', '-y', '0', '-z', '1',
         ],
         output='screen',
     )
@@ -44,6 +44,7 @@ def generate_launch_description():
         package='navigation',
         executable='hover_controller',
         namespace='drone_1',
+        parameters=[{'use_sim_time': True}],
         output='screen',
     )
 
