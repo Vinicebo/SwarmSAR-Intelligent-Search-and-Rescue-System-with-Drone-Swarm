@@ -14,6 +14,7 @@ A simulation of a fully decentralized drone swarm performing autonomous search a
 - [Communication Protocol](#communication-protocol)
 - [Project Structure](#project-structure)
 - [Setup and Installation](#setup-and-installation)
+- [Build Guide](docs/build.md)
 - [Running the Simulation](#running-the-simulation)
 - [Dashboard Interface](#dashboard-interface)
 - [Metrics](#metrics)
