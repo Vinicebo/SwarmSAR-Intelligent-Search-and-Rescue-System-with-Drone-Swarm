@@ -15,6 +15,8 @@ A simulation of a fully decentralized drone swarm performing autonomous search a
 - [Project Structure](#project-structure)
 - [Setup and Installation](#setup-and-installation)
 - [Build Guide](docs/build.md)
+- [Simulation Notes](docs/simulation_notes.md)
+- [Phase 1 Retrospective](docs/phase1_retrospective.md)
 - [Running the Simulation](#running-the-simulation)
 - [Dashboard Interface](#dashboard-interface)
 - [Metrics](#metrics)
@@ -133,7 +135,9 @@ All sensors are simulated in Gazebo and published on standard ROS 2 topics:
 
 Drones communicate peer-to-peer using ROS 2 topics with a simulated range constraint. No message broker or central node.
 
-Each drone periodically broadcasts a **SwarmState** message containing:
+Every drone's `swarm_state_node` (see [src/communication/communication/swarm_state_node.py](src/communication/communication/swarm_state_node.py)) publishes and subscribes on the **same absolute topic**, `/swarm_state` — there is no per-drone relay or central broker deciding who receives what. Each drone locally discards any broadcast from outside its simulated radio range, the same way a real receiver would simply fail to pick up a weak signal; nothing outside the receiving drone itself decides that.
+
+Each drone periodically broadcasts a **SwarmState** message (defined in [src/swarm_interfaces/msg/SwarmState.msg](src/swarm_interfaces/msg/SwarmState.msg) — a separate `ament_cmake` package, since the pure-Python module packages can't generate custom messages):
 
 ```
 SwarmState:
@@ -146,7 +150,9 @@ SwarmState:
   timestamp:      builtin_interfaces/Time
 ```
 
-Messages outside simulated radio range (configurable, default: 50 m) are dropped by a range filter node in the simulator.
+Messages outside simulated radio range (configurable, default: 50 m) are dropped locally by the receiving drone's own node — filtering happens at the edge, not in the middle.
+
+`battery_pct`, `status`, `map_diff`, and `victims_found` are placeholders until the battery, planning, mapping, and search modules land in later phases; `position` is already live, computed from the bridged GPS reading via a local equirectangular projection around the world's `spherical_coordinates` origin.
 
 ---
 
@@ -163,7 +169,8 @@ SwarmSAR/
 │   ├── search/             # Victim detection, confirmation filter, alert publisher
 │   ├── battery/            # Charge estimator, return-to-home trigger
 │   ├── collision/          # Reactive avoidance, LiDAR-based repulsion
-│   └── simulator/          # Drone spawner, world manager, range filter
+│   ├── simulator/          # Drone spawner, world manager, per-drone templating
+│   └── swarm_interfaces/   # Custom messages (SwarmState) — ament_cmake, not ament_python
 ├── config/
 │   ├── swarm_params.yaml   # Swarm size, comm range, battery thresholds
 │   ├── boids_params.yaml   # Separation/alignment/cohesion weights

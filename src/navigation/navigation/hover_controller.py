@@ -4,8 +4,6 @@ from ros_gz_interfaces.msg import EntityWrench
 from ros_gz_interfaces.msg import Entity
 from sensor_msgs.msg import NavSatFix
 
-TARGET_ENTITY = Entity(name='drone_1::base_link', type=Entity.LINK)
-
 # gz-sim's ApplyLinkWrench system adds each message on the "persistent"
 # wrench topic to whatever standing force is already applied to the entity,
 # rather than replacing it — so republishing the same absolute force every
@@ -36,6 +34,9 @@ class HoverController(Node):
 
     def __init__(self):
         super().__init__('hover_controller')
+        self.declare_parameter('drone_id', 'drone_1')
+        drone_id = self.get_parameter('drone_id').get_parameter_value().string_value
+        self.target_entity = Entity(name=f'{drone_id}::base_link', type=Entity.LINK)
         self.publisher = self.create_publisher(EntityWrench, 'force', 10)
         self.gps_sub = self.create_subscription(NavSatFix, 'gps', self.on_gps, 10)
         self.timer = self.create_timer(CONTROL_PERIOD_S, self.publish_force)
@@ -74,7 +75,7 @@ class HoverController(Node):
         self.applied_force_z = self.force_z
 
         msg = EntityWrench()
-        msg.entity = TARGET_ENTITY
+        msg.entity = self.target_entity
         msg.wrench.force.z = delta
         self.publisher.publish(msg)
 

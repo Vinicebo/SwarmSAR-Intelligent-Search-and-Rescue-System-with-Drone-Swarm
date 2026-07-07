@@ -92,10 +92,14 @@ echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
 ## 6. Verify the Build
 
 ```bash
-ros2 pkg list | grep -E "communication|navigation|formation|mapping|planning|search|battery|collision|simulator"
+ros2 pkg list | grep -E "communication|navigation|formation|mapping|planning|search|battery|collision|simulator|swarm_interfaces"
 ```
 
-All 9 packages should be listed. If any are missing, check the corresponding `colcon build` output above for errors in that package's `package.xml` or `setup.py`.
+All 10 packages should be listed (the 9 modules plus `swarm_interfaces`, the message-definition package — see below). If any are missing, check the corresponding `colcon build` output above for errors in that package's `package.xml`/`setup.py`/`CMakeLists.txt`.
+
+### Why `swarm_interfaces` is a separate package
+
+All 9 module packages are `ament_python`. Pure-Python ROS 2 packages cannot generate custom `.msg` types — message generation requires `rosidl_default_generators`, which only works in an `ament_cmake` package. `swarm_interfaces` exists solely to define `SwarmState.msg` (the periodic broadcast used by the communication module) and any other shared message types; it has no nodes of its own.
 
 ## 7. Run
 

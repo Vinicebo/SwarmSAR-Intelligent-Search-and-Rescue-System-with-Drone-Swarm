@@ -1,35 +1,29 @@
-- ros_topic_name: "drone_1/imu"
-  gz_topic_name: "drone_1/imu"
+- ros_topic_name: "{drone_id}/imu"
+  gz_topic_name: "{drone_id}/imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "drone_1/gps"
-  gz_topic_name: "drone_1/gps"
+- ros_topic_name: "{drone_id}/gps"
+  gz_topic_name: "{drone_id}/gps"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "gz.msgs.NavSat"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "drone_1/scan"
-  gz_topic_name: "drone_1/scan"
+- ros_topic_name: "{drone_id}/scan"
+  gz_topic_name: "{drone_id}/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "drone_1/camera/image"
-  gz_topic_name: "drone_1/camera/image"
+- ros_topic_name: "{drone_id}/camera/image"
+  gz_topic_name: "{drone_id}/camera/image"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "gz.msgs.Image"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "drone_1/force"
+- ros_topic_name: "{drone_id}/force"
   gz_topic_name: "world/earthquake_city/wrench/persistent"
   ros_type_name: "ros_gz_interfaces/msg/EntityWrench"
   gz_type_name: "gz.msgs.EntityWrench"
   direction: ROS_TO_GZ
-
-- ros_topic_name: "clock"
-  gz_topic_name: "clock"
-  ros_type_name: "rosgraph_msgs/msg/Clock"
-  gz_type_name: "gz.msgs.Clock"
-  direction: GZ_TO_ROS

@@ -6,14 +6,22 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
+from simulator.spawn_helpers import render_bridge_yaml, render_drone_sdf
+
+DRONE_ID = 'drone_1'
+
 
 def generate_launch_description():
     simulator_share = get_package_share_directory('simulator')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
     world_path = os.path.join(simulator_share, 'worlds', 'earthquake_city.world')
-    model_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf')
-    bridge_config_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml')
+    sdf_template_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf.template')
+    bridge_template_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml.template')
+    clock_bridge_path = os.path.join(simulator_share, 'config', 'clock_bridge.yaml')
+
+    model_path = render_drone_sdf(sdf_template_path, DRONE_ID)
+    bridge_config_path = render_bridge_yaml(bridge_template_path, [DRONE_ID], clock_bridge_path)
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -26,7 +34,7 @@ def generate_launch_description():
         package='ros_gz_sim',
         executable='create',
         arguments=[
-            '-name', 'drone_1',
+            '-name', DRONE_ID,
             '-file', model_path,
             '-x', '0', '-y', '0', '-z', '1',
         ],
@@ -43,8 +51,17 @@ def generate_launch_description():
     hover_controller = Node(
         package='navigation',
         executable='hover_controller',
-        namespace='drone_1',
-        parameters=[{'use_sim_time': True}],
+        namespace=DRONE_ID,
+        parameters=[{'use_sim_time': True, 'drone_id': DRONE_ID}],
+        output='screen',
+    )
+
+    swarm_state_node = Node(
+        package='communication',
+        executable='swarm_state_node',
+        namespace=DRONE_ID,
+        parameters=[{'use_sim_time': True, 'drone_id': DRONE_ID}],
+        remappings=[('swarm_state', '/swarm_state')],
         output='screen',
     )
 
@@ -53,4 +70,5 @@ def generate_launch_description():
         spawn_drone,
         bridge,
         hover_controller,
+        swarm_state_node,
     ])

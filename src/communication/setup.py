@@ -17,6 +17,8 @@ setup(
     description='Peer-to-peer communication module for the SwarmSAR drone swarm.',
     license='MIT',
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'swarm_state_node = communication.swarm_state_node:main',
+        ],
     },
 )

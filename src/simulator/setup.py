@@ -23,7 +23,8 @@ setup(
         (os.path.join('share', package_name, 'models', 'quadrotor'),
             glob(os.path.join(repo_root, 'models', 'quadrotor', '*'))),
         (os.path.join('share', package_name, 'config'),
-            glob(os.path.join(repo_root, 'config', '*.yaml'))),
+            glob(os.path.join(repo_root, 'config', '*.yaml'))
+            + glob(os.path.join(repo_root, 'config', '*.yaml.template'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
