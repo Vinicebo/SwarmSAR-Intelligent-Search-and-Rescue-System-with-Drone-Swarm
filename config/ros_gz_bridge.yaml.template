@@ -23,7 +23,7 @@
   direction: GZ_TO_ROS
 
 - ros_topic_name: "{drone_id}/force"
-  gz_topic_name: "world/earthquake_city/wrench/persistent"
+  gz_topic_name: "world/{world}/wrench/persistent"
   ros_type_name: "ros_gz_interfaces/msg/EntityWrench"
   gz_type_name: "gz.msgs.EntityWrench"
   direction: ROS_TO_GZ

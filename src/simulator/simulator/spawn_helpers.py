@@ -19,11 +19,16 @@ def render_drone_sdf(sdf_template_path, drone_id):
     return path
 
 
-def render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path):
+def render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path, world_name):
     """Concatenate one rendering of the per-drone bridge template for every
     drone_id, plus the shared clock bridge, into a single parameter_bridge
-    config file."""
-    entries = [_render(bridge_template_path, drone_id=drone_id) for drone_id in drone_ids]
+    config file. world_name must match the <world name="..."> in the loaded
+    .world file, since the force topic is scoped to it
+    (world/{world_name}/wrench/persistent)."""
+    entries = [
+        _render(bridge_template_path, drone_id=drone_id, world=world_name)
+        for drone_id in drone_ids
+    ]
     with open(clock_bridge_path, 'r') as f:
         entries.append(f.read())
 

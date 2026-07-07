@@ -35,7 +35,7 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'gz_args': world_path}.items(),
     )
 
-    bridge_config_path = render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path)
+    bridge_config_path = render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path, world_name)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',

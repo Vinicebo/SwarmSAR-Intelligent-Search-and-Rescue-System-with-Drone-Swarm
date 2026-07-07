@@ -9,19 +9,20 @@ from launch_ros.actions import Node
 from simulator.spawn_helpers import render_bridge_yaml, render_drone_sdf
 
 DRONE_ID = 'drone_1'
+WORLD_NAME = 'earthquake_city'
 
 
 def generate_launch_description():
     simulator_share = get_package_share_directory('simulator')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
-    world_path = os.path.join(simulator_share, 'worlds', 'earthquake_city.world')
+    world_path = os.path.join(simulator_share, 'worlds', f'{WORLD_NAME}.world')
     sdf_template_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf.template')
     bridge_template_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml.template')
     clock_bridge_path = os.path.join(simulator_share, 'config', 'clock_bridge.yaml')
 
     model_path = render_drone_sdf(sdf_template_path, DRONE_ID)
-    bridge_config_path = render_bridge_yaml(bridge_template_path, [DRONE_ID], clock_bridge_path)
+    bridge_config_path = render_bridge_yaml(bridge_template_path, [DRONE_ID], clock_bridge_path, WORLD_NAME)
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
