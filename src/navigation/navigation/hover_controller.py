@@ -10,7 +10,14 @@ from sensor_msgs.msg import NavSatFix
 # control tick makes the applied force grow without bound. Publishing the
 # delta from the last commanded force instead makes the *cumulative* total
 # on the Gazebo side track the intended absolute value.
-
+#
+# Clearing and re-setting the absolute force every tick (instead of
+# tracking a delta) was tried as an alternative and made things worse: in
+# this bridge/gz setup, clear consistently "wins" the race against that
+# same tick's set regardless of publish order, so every tick's force gets
+# wiped and the drone never moves at all. Delta-tracking is what actually
+# works; see docs/simulation_notes.md for the caveat about it needing this
+# controller to be the sole publisher for its entity's standing force.
 GRAVITY_MS2 = 9.81
 DRONE_MASS_KG = 1.5
 TARGET_ALTITUDE_M = 3.0
@@ -25,6 +32,15 @@ KD = 4.0
 INTEGRAL_LIMIT = 10.0
 MAX_FORCE_N = 3.0 * HOVER_FORCE_N
 
+# Delta-tracking only works if this controller is the sole publisher on the
+# entity's standing force since it hit zero. If this process restarts after
+# a crash, its own applied_force_z resets to 0 but whatever a previous
+# instance left standing in Gazebo doesn't — so every restart clears the
+# entity's force first and holds off on real control for a short window
+# to give that clear time to actually reach the bridge before trusting the
+# zero baseline.
+STARTUP_CLEAR_TICKS = 30
+
 
 class HoverController(Node):
     """Feed-forward gravity compensation plus a PID loop on altitude error
@@ -38,6 +54,7 @@ class HoverController(Node):
         drone_id = self.get_parameter('drone_id').get_parameter_value().string_value
         self.target_entity = Entity(name=f'{drone_id}::base_link', type=Entity.LINK)
         self.publisher = self.create_publisher(EntityWrench, 'force', 10)
+        self.clear_publisher = self.create_publisher(Entity, 'force_clear', 10)
         self.gps_sub = self.create_subscription(NavSatFix, 'gps', self.on_gps, 10)
         self.timer = self.create_timer(CONTROL_PERIOD_S, self.publish_force)
         self.force_z = HOVER_FORCE_N
@@ -45,6 +62,7 @@ class HoverController(Node):
         self.integral_error = 0.0
         self.previous_error = 0.0
         self.previous_gps_time = None
+        self.startup_clear_ticks_left = STARTUP_CLEAR_TICKS
         self.get_logger().info('Hover controller started.')
 
     def on_gps(self, msg):
@@ -59,6 +77,12 @@ class HoverController(Node):
 
         if self.previous_gps_time is not None:
             dt = (now - self.previous_gps_time).nanoseconds / 1e9
+            if dt <= 0:
+                # Two readings landed with the same (or out-of-order) sim
+                # timestamp — most often several messages queued at once
+                # right at startup. Skip this update rather than divide by
+                # a zero/negative dt; the next reading will have a real gap.
+                return
             self.integral_error += error * dt
             self.integral_error = max(-INTEGRAL_LIMIT, min(INTEGRAL_LIMIT, self.integral_error))
             derivative_error = (error - self.previous_error) / dt
@@ -71,6 +95,14 @@ class HoverController(Node):
         self.previous_gps_time = now
 
     def publish_force(self):
+        if self.startup_clear_ticks_left > 0:
+            # Repeated, not just once: the clear message has to actually
+            # win the race against bridge/discovery startup latency, and
+            # clearing an already-zero force is a harmless no-op.
+            self.clear_publisher.publish(self.target_entity)
+            self.startup_clear_ticks_left -= 1
+            return
+
         delta = self.force_z - self.applied_force_z
         self.applied_force_z = self.force_z
 

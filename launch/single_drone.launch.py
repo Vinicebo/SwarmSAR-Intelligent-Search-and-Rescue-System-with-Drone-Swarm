@@ -19,10 +19,11 @@ def generate_launch_description():
     world_path = os.path.join(simulator_share, 'worlds', f'{WORLD_NAME}.world')
     sdf_template_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf.template')
     bridge_template_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml.template')
-    clock_bridge_path = os.path.join(simulator_share, 'config', 'clock_bridge.yaml')
+    world_bridge_template_path = os.path.join(simulator_share, 'config', 'world_bridge.yaml.template')
 
     model_path = render_drone_sdf(sdf_template_path, DRONE_ID)
-    bridge_config_path = render_bridge_yaml(bridge_template_path, [DRONE_ID], clock_bridge_path, WORLD_NAME)
+    bridge_config_path = render_bridge_yaml(
+        bridge_template_path, [DRONE_ID], world_bridge_template_path, WORLD_NAME)
 
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -54,6 +55,7 @@ def generate_launch_description():
         executable='hover_controller',
         namespace=DRONE_ID,
         parameters=[{'use_sim_time': True, 'drone_id': DRONE_ID}],
+        remappings=[('force', '/drone_force'), ('force_clear', '/drone_force_clear')],
         output='screen',
     )
 

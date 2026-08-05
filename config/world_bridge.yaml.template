@@ -1,0 +1,26 @@
+- ros_topic_name: "clock"
+  gz_topic_name: "clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# One shared topic for every drone's force commands, bridged once — gz's
+# ApplyLinkWrench system only allows a single ROS->GZ advertisement per gz
+# topic per bridge process, so giving each drone its own per-drone force
+# topic pointing at this same world-level gz topic fails to advertise past
+# the first one. Each EntityWrench message's own entity field says which
+# drone it's for, same as how /swarm_state works for SwarmState broadcasts.
+- ros_topic_name: "drone_force"
+  gz_topic_name: "world/{world}/wrench/persistent"
+  ros_type_name: "ros_gz_interfaces/msg/EntityWrench"
+  gz_type_name: "gz.msgs.EntityWrench"
+  direction: ROS_TO_GZ
+
+# Each hover controller clears its own entity's standing force once at
+# startup, so a crash/restart doesn't inherit whatever force a previous
+# instance left applied — see hover_controller.py's STARTUP_CLEAR_TICKS.
+- ros_topic_name: "drone_force_clear"
+  gz_topic_name: "world/{world}/wrench/clear"
+  ros_type_name: "ros_gz_interfaces/msg/Entity"
+  gz_type_name: "gz.msgs.Entity"
+  direction: ROS_TO_GZ

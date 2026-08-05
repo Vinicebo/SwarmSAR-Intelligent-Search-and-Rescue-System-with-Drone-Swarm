@@ -52,9 +52,23 @@ Fixed by templating:
 - `hover_controller.py` now reads `drone_id` as a ROS parameter instead of a module constant.
 - `launch/swarm.launch.py` added, spawning N drones (`num_drones:=` launch arg, default 30) each with its own rendered SDF/bridge/controller.
 
+### 4. Only `drone_1` actually hovered in a real `num_drones:=30` run (`6a2cbcf` and follow-up)
+
+The first real end-to-end run surfaced two more issues the paper review above missed:
+
+- **Per-drone force topics didn't scale.** Templating gave every drone its own `{drone_id}/force` ROS topic, but all of them bridged to the same world-level `wrench/persistent` gz topic. `parameter_bridge` can only advertise a given gz topic once per process — every bridge entry after the first failed silently (`Node::Advertise(): Error advertising topic ...`), so only `drone_1`'s force commands ever reached Gazebo. Fixed by moving to one shared `drone_force` ROS topic (bridged once, in `config/world_bridge.yaml.template`), the same pattern `/swarm_state` already used — Gazebo routes each `EntityWrench` to the right drone via the message's `entity` field, not the ROS topic name. See [docs/simulation_notes.md](simulation_notes.md#a-gz-topic-can-only-be-bridged-once-per-process).
+- **The force bridge's world name was still hardcoded** to `earthquake_city` in the template even after drone-id templating, so `swarm.launch.py world:=<anything else>` would have silently broken force actuation the same way. Now templated as `{world}` and rendered from the launch file's actual `world` argument.
+
+Fixing the shared-topic issue then surfaced two more, only visible with two real controllers running against the same live Gazebo instance:
+
+- **A restarted controller inherited a stale force baseline.** One drone's controller crashed (see next point) and was relaunched; its fresh `applied_force_z = 0.0` no longer matched what was actually still standing on its entity in Gazebo, so its delta math was permanently offset and the drone settled into an arbitrary frozen altitude instead of 3 m. Fixed by clearing the entity's standing force at the start of every controller instance (repeated for a short window, not a single message, to survive bridge/discovery startup latency) — see `STARTUP_CLEAR_TICKS` in `hover_controller.py`.
+- **A `ZeroDivisionError` crashed a controller outright** when two GPS readings landed with the same (or an out-of-order) simulated timestamp — something that didn't show up with only one drone's timing on the host. Fixed with a `dt <= 0` guard that skips the update instead of dividing.
+
+See [docs/simulation_notes.md](simulation_notes.md) for the technical detail on both.
+
 ## What's Still Untested
 
-None of the above has been run against a real Gazebo instance yet — the changes are consistent on paper (templating, dependencies, message types) but haven't been verified end-to-end on the user's Ubuntu 26.04 machine. Before starting Phase 2 communication work, the practical next step is:
+The fixes above have been verified against two real controllers running concurrently against one live (headless) Gazebo instance, including one deliberately crashing and restarting mid-flight — both converged cleanly to 3 m with no oscillation. Not yet verified: the full 30-drone scale, the full sensor suite (camera/lidar) under GUI rendering, and any of this on the user's actual machine rather than this sandboxed environment. Before starting further Phase 2 communication work, the practical next step is:
 
 ```bash
 ros2 launch simulator single_drone.launch.py     # confirm hover still works after templating

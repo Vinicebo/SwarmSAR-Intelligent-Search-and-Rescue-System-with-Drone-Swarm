@@ -19,18 +19,17 @@ def render_drone_sdf(sdf_template_path, drone_id):
     return path
 
 
-def render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path, world_name):
+def render_bridge_yaml(bridge_template_path, drone_ids, world_bridge_template_path, world_name):
     """Concatenate one rendering of the per-drone bridge template for every
-    drone_id, plus the shared clock bridge, into a single parameter_bridge
-    config file. world_name must match the <world name="..."> in the loaded
-    .world file, since the force topic is scoped to it
-    (world/{world_name}/wrench/persistent)."""
+    drone_id, plus one rendering of the shared world-level bridge (clock,
+    force), into a single parameter_bridge config file. world_name must
+    match the <world name="..."> in the loaded .world file, since both the
+    force topic and /clock are scoped to it."""
     entries = [
-        _render(bridge_template_path, drone_id=drone_id, world=world_name)
+        _render(bridge_template_path, drone_id=drone_id)
         for drone_id in drone_ids
     ]
-    with open(clock_bridge_path, 'r') as f:
-        entries.append(f.read())
+    entries.append(_render(world_bridge_template_path, world=world_name))
 
     fd, path = tempfile.mkstemp(prefix='ros_gz_bridge_', suffix='.yaml')
     with os.fdopen(fd, 'w') as f:

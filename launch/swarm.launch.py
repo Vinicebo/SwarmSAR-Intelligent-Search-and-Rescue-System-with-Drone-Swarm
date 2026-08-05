@@ -24,7 +24,7 @@ def launch_setup(context, *args, **kwargs):
     world_path = os.path.join(simulator_share, 'worlds', f'{world_name}.world')
     sdf_template_path = os.path.join(simulator_share, 'models', 'quadrotor', 'model.sdf.template')
     bridge_template_path = os.path.join(simulator_share, 'config', 'ros_gz_bridge.yaml.template')
-    clock_bridge_path = os.path.join(simulator_share, 'config', 'clock_bridge.yaml')
+    world_bridge_template_path = os.path.join(simulator_share, 'config', 'world_bridge.yaml.template')
 
     drone_ids = [f'drone_{i + 1}' for i in range(num_drones)]
 
@@ -35,7 +35,8 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={'gz_args': world_path}.items(),
     )
 
-    bridge_config_path = render_bridge_yaml(bridge_template_path, drone_ids, clock_bridge_path, world_name)
+    bridge_config_path = render_bridge_yaml(
+        bridge_template_path, drone_ids, world_bridge_template_path, world_name)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -61,11 +62,15 @@ def launch_setup(context, *args, **kwargs):
             output='screen',
         ))
 
+        # 'force' is remapped to the same absolute topic for every drone —
+        # see world_bridge.yaml.template for why per-drone force topics
+        # can't each get their own bridge to the same gz wrench topic.
         actions.append(Node(
             package='navigation',
             executable='hover_controller',
             namespace=drone_id,
             parameters=[{'use_sim_time': True, 'drone_id': drone_id}],
+            remappings=[('force', '/drone_force'), ('force_clear', '/drone_force_clear')],
             output='screen',
         ))
 
