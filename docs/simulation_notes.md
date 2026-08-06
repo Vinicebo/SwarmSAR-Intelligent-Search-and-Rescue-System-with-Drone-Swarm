@@ -47,6 +47,7 @@ Fixed by templating:
 
 Any new controller that needs to know which drone it's running on should follow the same pattern: a `drone_id` ROS parameter (or namespace-derived value), never a hardcoded string.
 
+<<<<<<< Updated upstream
 ## A gz Topic Can Only Be Bridged Once Per Process
 
 The first swarm attempt gave every drone its own `{drone_id}/force` ROS topic, each bridged to the *same* `world/<world>/wrench/persistent` gz topic. Only `drone_1` ever hovered — every other drone's bridge entry failed with `Node::Advertise(): Error advertising topic ... Did you forget to start the discovery service?`, logged but easy to miss among 30 drones' worth of startup output. `parameter_bridge` can't create more than one ROS→GZ advertisement for the same gz topic within one process, no matter how many different ROS-side topic names point at it.
@@ -64,6 +65,15 @@ Fixed by clearing the entity's standing force at the start of every controller i
 ## Guard Against Zero/Negative `dt` in Timing-Based Control
 
 Two GPS readings can land back-to-back with the same (or, if queued out of order, an earlier) simulated timestamp — this showed up as a `ZeroDivisionError` in the derivative term as soon as a second drone was added to the same process/host, not with a single drone. Any control loop dividing by measured `dt` needs `if dt <= 0: return` (skip the update, keep the last good `previous_error`/`previous_time`) before doing the division — don't assume consecutive sensor messages always have strictly increasing timestamps.
+=======
+## Spawn-vs-Controller Race With Delta-Tracked Force
+
+Spawning a drone (`ros_gz_sim create`) and starting its controller node happen in parallel launch actions with no ordering guarantee. With 30 drones, Gazebo processes the spawn requests one at a time, so the last few entities can take a noticeable moment to actually exist.
+
+This collided badly with the delta-tracking pattern above: the hover controller used to start its force-publish timer immediately in `__init__`. If the very first (largest) message — the one compensating gravity — was sent before the entity existed, it was silently dropped. But the controller's internal `applied_force_z` was still updated as if it had landed, permanently desyncing the node's belief about the standing force from what Gazebo actually had (zero). Every following delta was computed against that false baseline, so the real applied force stayed near zero and the drone never left the ground — intermittently, for whichever few drones happened to lose the race that run.
+
+**Fix**: don't start the force timer until you have positive proof the entity is alive. A sensor reading (GPS, IMU — anything attached to the entity) only exists once the entity and its sensors are live in the scene graph, so gate the timer on the first sensor callback instead of starting it in `__init__`. Any future controller that both (a) depends on the target entity already existing and (b) tracks cumulative/delta state must use the same gate — starting stateful, fire-and-forget publishing before the target is confirmed to exist is the general failure mode here, not something specific to hovering.
+>>>>>>> Stashed changes
 
 ## Applying These Lessons Going Forward
 
@@ -73,6 +83,10 @@ Any new module that commands forces/velocities (navigation, collision avoidance)
 - Set `use_sim_time` and rely on the bridged `/clock`.
 - Drive control-loop timing off the actual sensor message arrival, not a fixed timer.
 - Be written so the drone identity (entity name, topic namespace) is a parameter, never a hardcoded constant — this is the one that will bite hardest once Phase 2 spawns the full swarm.
+<<<<<<< Updated upstream
 - Never bridge the same gz topic under more than one ROS topic name — share one bridge entry and route by message content instead.
 - Clear any entity's standing persistent force at controller startup before trusting a local "applied force" baseline of zero.
 - Guard any `dt`-based division against `dt <= 0` — don't assume sensor timestamps are always strictly increasing between consecutive messages.
+=======
+- Gate any stateful, fire-and-forget publishing (deltas, accumulators) behind proof the target entity already exists — don't start it unconditionally in `__init__`.
+>>>>>>> Stashed changes

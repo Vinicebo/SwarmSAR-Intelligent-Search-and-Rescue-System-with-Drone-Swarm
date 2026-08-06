@@ -56,7 +56,17 @@ class HoverController(Node):
         self.publisher = self.create_publisher(EntityWrench, 'force', 10)
         self.clear_publisher = self.create_publisher(Entity, 'force_clear', 10)
         self.gps_sub = self.create_subscription(NavSatFix, 'gps', self.on_gps, 10)
-        self.timer = self.create_timer(CONTROL_PERIOD_S, self.publish_force)
+        # The force timer is started lazily, on the first GPS reading, rather
+        # than here — spawning and the controller starting up race each
+        # other, and if the very first (largest) force message is sent
+        # before gz-sim has actually created the entity, it's silently
+        # dropped. Because we track applied force as a running total (see
+        # note below), that desyncs this node's internal state from Gazebo's
+        # permanently: the node believes gravity is compensated when nothing
+        # was ever applied, and the drone never leaves the ground. A GPS
+        # reading only exists once the entity and its sensors are live in
+        # the scene graph, so waiting for one avoids the race entirely.
+        self.timer = None
         self.force_z = HOVER_FORCE_N
         self.applied_force_z = 0.0
         self.integral_error = 0.0
@@ -72,6 +82,9 @@ class HoverController(Node):
         # derivative against the timer period instead of the actual time
         # since the last reading exaggerates it whenever the two rates drift
         # out of sync, which destabilizes the loop.
+        if self.timer is None:
+            self.timer = self.create_timer(CONTROL_PERIOD_S, self.publish_force)
+
         now = self.get_clock().now()
         error = TARGET_ALTITUDE_M - msg.altitude
 
