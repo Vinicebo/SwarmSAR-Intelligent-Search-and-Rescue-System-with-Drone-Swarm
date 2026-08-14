@@ -154,6 +154,8 @@ Messages outside simulated radio range (configurable, default: 50 m) are dropped
 
 `battery_pct`, `status`, `map_diff`, and `victims_found` are placeholders until the battery, planning, mapping, and search modules land in later phases; `position` is already live, computed from the bridged GPS reading via a local equirectangular projection around the world's `spherical_coordinates` origin.
 
+Each drone also keeps a local table of in-range neighbors (`SwarmStateNode.neighbors`), pruning any neighbor it hasn't heard from in 5 seconds — this is currently the swarm's only way to notice a drone has moved out of range or failed, a first building block toward the fault-detection and task-redistribution features.
+
 ---
 
 ## Project Structure

@@ -95,7 +95,12 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('num_drones', default_value='30'),
+        # Defaulted below the project's target swarm size (30): a single
+        # parameter_bridge process currently saturates somewhere past ~20
+        # drones (see docs/simulation_notes.md), causing some drones to
+        # never receive their first sensor reading and never take off.
+        # Override with num_drones:=N once that bottleneck is addressed.
+        DeclareLaunchArgument('num_drones', default_value='20'),
         DeclareLaunchArgument('world', default_value='earthquake_city'),
         OpaqueFunction(function=launch_setup),
     ])
